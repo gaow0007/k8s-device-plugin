@@ -36,6 +36,10 @@ type NvidiaDevicePlugin struct {
 	virtual_devs []*pluginapi.Device
 }
 
+func GetTrueId(vid string) string {
+	return vid[:len(vid) - 2]
+}
+
 // NewNvidiaDevicePlugin returns an initialized NvidiaDevicePlugin
 func NewNvidiaDevicePlugin() *NvidiaDevicePlugin {
 	return &NvidiaDevicePlugin{
@@ -144,7 +148,7 @@ func (m *NvidiaDevicePlugin) ListAndWatch(e *pluginapi.Empty, s pluginapi.Device
 		case d := <-m.health:
 			// FIXME: there is no way to recover from the Unhealthy state.
 			d.Health = pluginapi.Unhealthy
-			s.Send(&pluginapi.ListAndWatchResponse{Devices: m.devs})
+			s.Send(&pluginapi.ListAndWatchResponse{Devices: m.virtual_devs})
 		}
 	}
 }
@@ -158,17 +162,21 @@ func (m *NvidiaDevicePlugin) Allocate(ctx context.Context, reqs *pluginapi.Alloc
 	devs := m.virtual_devs
 	responses := pluginapi.AllocateResponse{}
 	for _, req := range reqs.ContainerRequests {
+		var t_visible_device string
 		for _, v := range req.DevicesIDs {
 			if v[len(req.DevicesIDs) - 2:len(req.DevicesIDs) - 1] != "-" {
 				log.Fatal("error pattern in req.DevicesIDs : \n", v)
+				break
 			}
+			t_visible_device += GetTrueId(v) + ","
+			log.Println("append devices id ", GetTrueId(v), " as virtual devices id ", v)
 		}
 		response := pluginapi.ContainerAllocateResponse{
 			Envs: map[string]string{
-				"NVIDIA_VISIBLE_DEVICES": strings.Join(req.DevicesIDs[:len(req.DevicesIDs) - 2], ","),
+				"NVIDIA_VISIBLE_DEVICES": t_visible_device,
 			},
 		}
-		log.Println("append devices id ", req.DevicesIDs[0:len(req.DevicesIDs) - 2], " as virtual devices id ", req.DevicesIDs)
+		log.Println("return devices ids ", t_visible_device, "to k8s")
 		for _, id := range req.DevicesIDs {
 			if !deviceExists(devs, id) {
 				return nil, fmt.Errorf("invalid allocation request: unknown device: %s", id)
@@ -204,7 +212,7 @@ func (m *NvidiaDevicePlugin) healthcheck() {
 	var xids chan *pluginapi.Device
 	if !strings.Contains(disableHealthChecks, "xids") {
 		xids = make(chan *pluginapi.Device)
-		go watchXIDs(ctx, m.devs, xids)
+		go watchXIDs(ctx, m.virtual_devs, xids)
 	}
 
 	for {
