@@ -32,6 +32,8 @@ type NvidiaDevicePlugin struct {
 	health chan *pluginapi.Device
 
 	server *grpc.Server
+
+	virtual_devs []*pluginapi.Device
 }
 
 // NewNvidiaDevicePlugin returns an initialized NvidiaDevicePlugin
@@ -42,6 +44,8 @@ func NewNvidiaDevicePlugin() *NvidiaDevicePlugin {
 
 		stop:   make(chan interface{}),
 		health: make(chan *pluginapi.Device),
+
+		virtual_devs: getVirutalDevices(),
 	}
 }
 
@@ -131,7 +135,7 @@ func (m *NvidiaDevicePlugin) Register(kubeletEndpoint, resourceName string) erro
 
 // ListAndWatch lists devices and update that list according to the health status
 func (m *NvidiaDevicePlugin) ListAndWatch(e *pluginapi.Empty, s pluginapi.DevicePlugin_ListAndWatchServer) error {
-	s.Send(&pluginapi.ListAndWatchResponse{Devices: m.devs})
+	s.Send(&pluginapi.ListAndWatchResponse{Devices: m.virtual_devs})
 
 	for {
 		select {
@@ -151,15 +155,20 @@ func (m *NvidiaDevicePlugin) unhealthy(dev *pluginapi.Device) {
 
 // Allocate which return list of devices.
 func (m *NvidiaDevicePlugin) Allocate(ctx context.Context, reqs *pluginapi.AllocateRequest) (*pluginapi.AllocateResponse, error) {
-	devs := m.devs
+	devs := m.virtual_devs
 	responses := pluginapi.AllocateResponse{}
 	for _, req := range reqs.ContainerRequests {
+		for _, v := range req.DevicesIDs {
+			if v[len(req.DevicesIDs) - 2:len(req.DevicesIDs) - 1] != "-" {
+				log.Fatal("error pattern in req.DevicesIDs : \n", v)
+			}
+		}
 		response := pluginapi.ContainerAllocateResponse{
 			Envs: map[string]string{
-				"NVIDIA_VISIBLE_DEVICES": strings.Join(req.DevicesIDs, ","),
+				"NVIDIA_VISIBLE_DEVICES": strings.Join(req.DevicesIDs[:len(req.DevicesIDs) - 2], ","),
 			},
 		}
-
+		log.Println("append devices id ", req.DevicesIDs[0:len(req.DevicesIDs) - 2], " as virtual devices id ", req.DevicesIDs)
 		for _, id := range req.DevicesIDs {
 			if !deviceExists(devs, id) {
 				return nil, fmt.Errorf("invalid allocation request: unknown device: %s", id)

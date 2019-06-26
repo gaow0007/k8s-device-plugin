@@ -4,6 +4,7 @@ package main
 
 import (
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/NVIDIA/gpu-monitoring-tools/bindings/go/nvml"
@@ -11,6 +12,8 @@ import (
 	"golang.org/x/net/context"
 	pluginapi "k8s.io/kubernetes/pkg/kubelet/apis/deviceplugin/v1beta1"
 )
+
+const nGPU uint = 4
 
 func check(err error) {
 	if err != nil {
@@ -34,6 +37,28 @@ func getDevices() []*pluginapi.Device {
 
 	return devs
 }
+
+
+func getVirutalDevices() []*pluginapi.Device {
+	n, err := nvml.GetDeviceCount()
+	check(err)
+
+	var vdevs []*pluginapi.Device
+	for i := uint(0); i < n; i++ {
+		d, err := nvml.NewDevice(i)
+		check(err)
+		for j := uint(0); j < nGPU; j++ {
+			vdevs = append(vdevs, &pluginapi.Device{
+				ID: d.UUID + "-" + strconv.Itoa(int(j)),
+				Health: pluginapi.Healthy,
+			})
+			log.Printf("append %s as virtual of %s into virtual_dev", d.UUID + "-" + strconv.Itoa(int(j)), d.UUID)
+		}
+	}
+
+	return vdevs
+}
+
 
 func deviceExists(devs []*pluginapi.Device, id string) bool {
 	for _, d := range devs {
