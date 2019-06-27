@@ -38,7 +38,6 @@ func getDevices() []*pluginapi.Device {
 	return devs
 }
 
-
 func getVirutalDevices() []*pluginapi.Device {
 	n, err := nvml.GetDeviceCount()
 	check(err)
@@ -49,16 +48,15 @@ func getVirutalDevices() []*pluginapi.Device {
 		check(err)
 		for j := uint(0); j < nGPU; j++ {
 			vdevs = append(vdevs, &pluginapi.Device{
-				ID: d.UUID + "-" + strconv.Itoa(int(j)),
+				ID:     d.UUID + "-" + strconv.Itoa(int(j)),
 				Health: pluginapi.Healthy,
 			})
-			log.Printf("append %s as virtual of %s into virtual_dev", d.UUID + "-" + strconv.Itoa(int(j)), d.UUID)
+			log.Printf("append %s as virtual of %s into virtual_dev", d.UUID+"-"+strconv.Itoa(int(j)), d.UUID)
 		}
 	}
 
 	return vdevs
 }
-
 
 func deviceExists(devs []*pluginapi.Device, id string) bool {
 	for _, d := range devs {

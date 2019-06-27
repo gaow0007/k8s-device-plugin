@@ -36,13 +36,12 @@ type NvidiaDevicePlugin struct {
 	virtualDevs []*pluginapi.Device
 }
 
-
 // GetTrueID takes device name in k8s and return the true DeviceID in node
 func GetTrueID(vid string) string {
-	if vid[len(vid) - 2:len(vid) - 1] != "-" {
+	if vid[len(vid)-2:len(vid)-1] != "-" {
 		log.Fatal("error pattern in GetTrueId: ", vid)
 	}
-	return vid[:len(vid) - 2]
+	return vid[:len(vid)-2]
 }
 
 // NewNvidiaDevicePlugin returns an initialized NvidiaDevicePlugin
@@ -169,7 +168,7 @@ func (m *NvidiaDevicePlugin) Allocate(ctx context.Context, reqs *pluginapi.Alloc
 	for _, req := range reqs.ContainerRequests {
 		var tVisibleDevice string
 		for _, v := range req.DevicesIDs {
-			if v[len(req.DevicesIDs) - 2:len(req.DevicesIDs) - 1] != "-" {
+			if v[len(req.DevicesIDs)-2:len(req.DevicesIDs)-1] != "-" {
 				log.Fatal("error pattern in req.DevicesIDs : ", v)
 				break
 			}
