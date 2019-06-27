@@ -33,10 +33,15 @@ type NvidiaDevicePlugin struct {
 
 	server *grpc.Server
 
-	virtual_devs []*pluginapi.Device
+	virtualDevs []*pluginapi.Device
 }
 
-func GetTrueId(vid string) string {
+
+// GetTrueID takes device name in k8s and return the true DeviceID in node
+func GetTrueID(vid string) string {
+	if vid[len(vid) - 2:len(vid) - 1] != "-" {
+		log.Fatal("error pattern in GetTrueId: ", vid)
+	}
 	return vid[:len(vid) - 2]
 }
 
@@ -49,7 +54,7 @@ func NewNvidiaDevicePlugin() *NvidiaDevicePlugin {
 		stop:   make(chan interface{}),
 		health: make(chan *pluginapi.Device),
 
-		virtual_devs: getVirutalDevices(),
+		virtualDevs: getVirutalDevices(),
 	}
 }
 
@@ -139,7 +144,7 @@ func (m *NvidiaDevicePlugin) Register(kubeletEndpoint, resourceName string) erro
 
 // ListAndWatch lists devices and update that list according to the health status
 func (m *NvidiaDevicePlugin) ListAndWatch(e *pluginapi.Empty, s pluginapi.DevicePlugin_ListAndWatchServer) error {
-	s.Send(&pluginapi.ListAndWatchResponse{Devices: m.virtual_devs})
+	s.Send(&pluginapi.ListAndWatchResponse{Devices: m.virtualDevs})
 
 	for {
 		select {
@@ -148,7 +153,7 @@ func (m *NvidiaDevicePlugin) ListAndWatch(e *pluginapi.Empty, s pluginapi.Device
 		case d := <-m.health:
 			// FIXME: there is no way to recover from the Unhealthy state.
 			d.Health = pluginapi.Unhealthy
-			s.Send(&pluginapi.ListAndWatchResponse{Devices: m.virtual_devs})
+			s.Send(&pluginapi.ListAndWatchResponse{Devices: m.virtualDevs})
 		}
 	}
 }
@@ -159,24 +164,24 @@ func (m *NvidiaDevicePlugin) unhealthy(dev *pluginapi.Device) {
 
 // Allocate which return list of devices.
 func (m *NvidiaDevicePlugin) Allocate(ctx context.Context, reqs *pluginapi.AllocateRequest) (*pluginapi.AllocateResponse, error) {
-	devs := m.virtual_devs
+	devs := m.virtualDevs
 	responses := pluginapi.AllocateResponse{}
 	for _, req := range reqs.ContainerRequests {
-		var t_visible_device string
+		var tVisibleDevice string
 		for _, v := range req.DevicesIDs {
 			if v[len(req.DevicesIDs) - 2:len(req.DevicesIDs) - 1] != "-" {
-				log.Fatal("error pattern in req.DevicesIDs : \n", v)
+				log.Fatal("error pattern in req.DevicesIDs : ", v)
 				break
 			}
-			t_visible_device += GetTrueId(v) + ","
-			log.Println("append devices id ", GetTrueId(v), " as virtual devices id ", v)
+			tVisibleDevice += GetTrueID(v) + ","
+			log.Println("append devices id ", GetTrueID(v), " as virtual devices id ", v)
 		}
 		response := pluginapi.ContainerAllocateResponse{
 			Envs: map[string]string{
-				"NVIDIA_VISIBLE_DEVICES": t_visible_device,
+				"NVIDIA_VISIBLE_DEVICES": tVisibleDevice,
 			},
 		}
-		log.Println("return devices ids ", t_visible_device, "to k8s")
+		log.Println("return devices ids ", tVisibleDevice, "to k8s")
 		for _, id := range req.DevicesIDs {
 			if !deviceExists(devs, id) {
 				return nil, fmt.Errorf("invalid allocation request: unknown device: %s", id)
@@ -212,7 +217,7 @@ func (m *NvidiaDevicePlugin) healthcheck() {
 	var xids chan *pluginapi.Device
 	if !strings.Contains(disableHealthChecks, "xids") {
 		xids = make(chan *pluginapi.Device)
-		go watchXIDs(ctx, m.virtual_devs, xids)
+		go watchXIDs(ctx, m.virtualDevs, xids)
 	}
 
 	for {

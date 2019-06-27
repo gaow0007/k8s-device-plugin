@@ -76,7 +76,7 @@ func watchXIDs(ctx context.Context, devs []*pluginapi.Device, xids chan<- *plugi
 	// perhaps introduce unknown error
 
 	for _, d := range devs {
-		err := nvml.RegisterEventForDevice(eventSet, nvml.XidCriticalError, GetTrueId(d.ID))
+		err := nvml.RegisterEventForDevice(eventSet, nvml.XidCriticalError, GetTrueID(d.ID))
 		if err != nil && strings.HasSuffix(err.Error(), "Not Supported") {
 			log.Printf("Warning: %s is too old to support healthchecking: %s. Marking it unhealthy.", d.ID, err)
 
