@@ -168,7 +168,7 @@ func (m *NvidiaDevicePlugin) Allocate(ctx context.Context, reqs *pluginapi.Alloc
 	for _, req := range reqs.ContainerRequests {
 		var tVisibleDevice string
 		for _, v := range req.DevicesIDs {
-			if v[len(req.DevicesIDs)-2:len(req.DevicesIDs)-1] != "-" {
+			if v[len(v)-2:len(v)-1] != "-" {
 				log.Fatal("error pattern in req.DevicesIDs : ", v)
 				break
 			}
