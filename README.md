@@ -1,18 +1,5 @@
 # NVIDIA device plugin for Kubernetes
 
-## Table of Contents
-
-- [About](#about)
-- [Prerequisites](#prerequisites)
-- [Quick Start](#quick-start)
-  - [Preparing your GPU Nodes](#preparing-your-gpu-nodes)
-  - [Enabling GPU Support in Kubernetes](#enabling-gpu-support-in-kubernetes)
-  - [Running GPU Jobs](#running-gpu-jobs)
-- [Docs](#docs)
-- [Changelog](#changelog)
-- [Issues and Contributing](#issues-and-contributing)
-
-
 ## About
 
 The NVIDIA device plugin for Kubernetes is a Daemonset that allows you to automatically:
@@ -29,6 +16,15 @@ The list of prerequisites for running the NVIDIA device plugin is described belo
 * nvidia-docker version > 2.0 (see how to [install](https://github.com/NVIDIA/nvidia-docker) and it's [prerequisites](https://github.com/nvidia/nvidia-docker/wiki/Installation-\(version-2.0\)#prerequisites))
 * docker configured with nvidia as the [default runtime](https://github.com/NVIDIA/nvidia-docker/wiki/Advanced-topics#default-runtime).
 * Kubernetes version >= 1.10
+
+
+## Patch
+
+### Introduction
+
+The device plugin use NVIDIA nvml library to collect GPU information on each node and report it to Kubelet. We found that the plugin only collects the GPU deviceID and healthy status and report them to Kubernetes system. So we modify the data structure in `getDevices` in `nvidia.go`, reporting fake information of numbers of GPU in current node. To make it work, we store the origin information in the plugin and modify the `Allocate` function and healthy check function which are related. 
+
+In `Allocate` function, we found that the allocation of specified GPU is truly a simple process which return an ENV to Kubernetes, specifying `CUDA_VISIBLE_DEVICES`. We use the local information of the origin GPU deviceID, transferring them to Kubernetes to make the whole procedure work. The Kubernetes system is not aware of how many or which devices are truly used, which reduces the complexity of the whole job greatly.
 
 ## Quick Start
 
@@ -139,52 +135,3 @@ $ C_INCLUDE_PATH=/usr/local/cuda/include LIBRARY_PATH=/usr/local/cuda/lib64 go b
 ```shell
 $ ./k8s-device-plugin
 ```
-
-## Changelog
-
-### Version 1.0.0-beta
-
-- Reversioned to SEMVER as device plugins aren't tied to a specific version of kubernetes anymore.
-
-### Version 1.11
-
-- No change.
-
-### Version 1.10
-
-- The device Plugin API is now v1beta1
-
-### Version 1.9
-
-- The device Plugin API changed and is no longer compatible with 1.8
-- Error messages were added
-
-# Issues and Contributing
-
-* You can report a bug by [filing a new issue](https://github.com/NVIDIA/k8s-device-plugin/issues/new)
-* You can contribute by opening a [pull request](https://help.github.com/articles/using-pull-requests/)
-
-## Versioning
-
-Before 1.10 the versioning scheme of the device plugin had to match exactly the version of Kubernetes.
-After the promotion of device plugins to beta this condition was was no longer required.
-We quickly noticed that this versioning scheme was very confusing for users as they still expected to see
-a version of the device plugin for each version of Kubernetes.
-
-We recently decided to reversion to follow a SEMVER scheme. This means that we are currently a
-beta project (as we depend on the device plugin API which is beta).
-If you have a version of Kubernetes > 1.10 you can deploy this device plugin.
-
-## Upgrading Kubernetes with the device plugin
-
-Upgrading Kubernetes when you have a device plugin deployed doesn't require you to do any,
-particular changes to your workflow.
-The API is versioned and is pretty stable (though it is not guaranteed to be non breaking),
-you can therefore use the 1.0.0-beta version starting from kubernetes version 1.10, upgrading
-kubernetes won't require you to deploy a different version of the device plugin and you will
-see GPUs re-registering themselves after your node comes back online.
-
-
-Upgrading the device plugin is a more complex task. It is recommended to drain GPU tasks as
-we cannot guarantee that GPU tasks will survive a rolling upgrade.
-However we make best efforts to preserve GPU tasks during an upgrade.
