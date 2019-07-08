@@ -175,6 +175,7 @@ func (m *NvidiaDevicePlugin) Allocate(ctx context.Context, reqs *pluginapi.Alloc
 			tVisibleDevice += GetTrueID(v) + ","
 			log.Println("append devices id ", GetTrueID(v), " as virtual devices id ", v)
 		}
+		//TODO: add memory limit info in Envs
 		response := pluginapi.ContainerAllocateResponse{
 			Envs: map[string]string{
 				"NVIDIA_VISIBLE_DEVICES": tVisibleDevice,
