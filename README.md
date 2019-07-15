@@ -26,6 +26,15 @@ The device plugin use NVIDIA nvml library to collect GPU information on each nod
 
 In `Allocate` function, we found that the allocation of specified GPU is truly a simple process which return an ENV to Kubernetes, specifying `CUDA_VISIBLE_DEVICES`. We use the local information of the origin GPU deviceID, transferring them to Kubernetes to make the whole procedure work. The Kubernetes system is not aware of how many or which devices are truly used, which reduces the complexity of the whole job greatly.
 
+### Future Work
+
+- Configurable vGPU partition method
+
+- More flexible node relabel mechanism
+
+- More detailed and consistent log
+
+
 ## Quick Start
 
 ### Preparing your GPU Nodes
