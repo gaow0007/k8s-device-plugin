@@ -7,13 +7,13 @@ import (
 	"os"
 	"syscall"
 
-	"github.com/NVIDIA/gpu-monitoring-tools/bindings/go/nvml"
 	"github.com/fsnotify/fsnotify"
 	pluginapi "k8s.io/kubernetes/pkg/kubelet/apis/deviceplugin/v1beta1"
 )
 
 func main() {
-	log.Println("Loading NVML")
+	log.Println("Skip loading NVML")
+	/*
 	if err := nvml.Init(); err != nil {
 		log.Printf("Failed to initialize NVML: %s.", err)
 		log.Printf("If this is a GPU node, did you set the docker default runtime to `nvidia`?")
@@ -23,6 +23,7 @@ func main() {
 		select {}
 	}
 	defer func() { log.Println("Shutdown of NVML returned:", nvml.Shutdown()) }()
+	*/
 
 	log.Println("Fetching devices.")
 	if len(getDevices()) == 0 {

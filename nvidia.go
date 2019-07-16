@@ -4,6 +4,7 @@ package main
 
 import (
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/NVIDIA/gpu-monitoring-tools/bindings/go/nvml"
@@ -19,15 +20,19 @@ func check(err error) {
 }
 
 func getDevices() []*pluginapi.Device {
+	/*
 	n, err := nvml.GetDeviceCount()
 	check(err)
+	*/
 
 	var devs []*pluginapi.Device
-	for i := uint(0); i < n; i++ {
+	for i := int(0); i < 4; i++ {
+		/*
 		d, err := nvml.NewDeviceLite(i)
 		check(err)
+		*/
 		devs = append(devs, &pluginapi.Device{
-			ID:     d.UUID,
+			ID:     "testGPU-" + strconv.Itoa(i),
 			Health: pluginapi.Healthy,
 		})
 	}
