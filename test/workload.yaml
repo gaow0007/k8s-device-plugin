@@ -1,0 +1,44 @@
+apiVersion: frameworkcontroller.microsoft.com/v1
+kind: Framework
+metadata:
+  name: yzsmonitortest
+spec:
+  executionType: Start
+  retryPolicy:
+    fancyRetryPolicy: true
+    maxRetryCount: 2
+  taskRoles:
+  - name: ps
+    taskNumber: 1
+    frameworkAttemptCompletionPolicy:
+      minFailedTaskCount: 1
+      minSucceededTaskCount: -1
+    task:
+      retryPolicy:
+        fancyRetryPolicy: false
+        maxRetryCount: 0
+      pod:
+        spec:
+          restartPolicy: Never
+          hostNetwork: false
+          containers:
+          - name: yzsmonitortestpod
+            image: 192.168.202.74:5000/user-images/dgx-tf1.12-pytorch1.0-cuda9.0-py3
+            command: [
+            "sh", "-c",
+            "python /workspace/test/mnist.py"]
+            resources:
+              limits:
+                nvidia.com/gpu: 1                
+            volumeMounts:
+            - name: fakelibcudatest
+              mountPath: /workspace/test
+          serviceAccountName: frameworkbarrier
+          initContainers:
+          - name: framenameworkbarrier
+            image: frameworkcontroller/frameworkbarrier
+          volumes:
+          - name: fakelibcudatest
+            hostPath:
+                path: /home/amax/yzs/test
+           
