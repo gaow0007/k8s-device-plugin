@@ -13,7 +13,7 @@ import (
 	pluginapi "k8s.io/kubernetes/pkg/kubelet/apis/deviceplugin/v1beta1"
 )
 
-const nGPU uint = 4
+const nGPU uint = 2
 
 func check(err error) {
 	if err != nil {
