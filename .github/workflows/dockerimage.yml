@@ -1,0 +1,14 @@
+name: Docker Image CI
+
+on: [push]
+
+jobs:
+
+  build:
+ 
+    runs-on: ubuntu-latest
+ 
+    steps:
+    - uses: yzs981130/k8s-device-plugin@master
+    - name: Build patched k8s-device-plugin Docker image
+      run: docker build . --file Dockerfile --tag nvidia-device-plugin:$(date +%s)
