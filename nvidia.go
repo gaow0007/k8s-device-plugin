@@ -115,7 +115,7 @@ func watchXIDs(ctx context.Context, devs []*pluginapi.Device, xids chan<- *plugi
 		}
 
 		for _, d := range devs {
-			if d.ID == *e.UUID {
+			if GetTrueID(d.ID) == *e.UUID {
 				xids <- d
 			}
 		}
