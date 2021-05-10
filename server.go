@@ -118,7 +118,7 @@ func (m *NvidiaDevicePlugin) Start() error {
 	}
 	log.Printf("Registered device plugin for '%s' with Kubelet", m.resourceName)
 
-	go m.CheckHealth(m.stop, m.cachedDevices, m.health)
+	// go m.CheckHealth(m.stop, m.cachedDevices, m.health)
 
 	return nil
 }
