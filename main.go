@@ -22,7 +22,6 @@ import (
 	"os"
 	"syscall"
 
-	"github.com/NVIDIA/gpu-monitoring-tools/bindings/go/nvml"
 	"github.com/fsnotify/fsnotify"
 	cli "github.com/urfave/cli/v2"
 	pluginapi "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
@@ -108,7 +107,8 @@ func validateFlags(c *cli.Context) error {
 }
 
 func start(c *cli.Context) error {
-	log.Println("Loading NVML")
+	log.Println("Skip Loading NVML")
+	/*
 	if err := nvml.Init(); err != nil {
 		log.SetOutput(os.Stderr)
 		log.Printf("Failed to initialize NVML: %v.", err)
@@ -122,6 +122,7 @@ func start(c *cli.Context) error {
 		select {}
 	}
 	defer func() { log.Println("Shutdown of NVML returned:", nvml.Shutdown()) }()
+	*/
 
 	log.Println("Starting FS watcher.")
 	watcher, err := newFSWatcher(pluginapi.DevicePluginPath)

@@ -79,22 +79,14 @@ func NewMigDeviceManager(strategy MigStrategy, resource string) *MigDeviceManage
 
 // Devices returns a list of devices from the GpuDeviceManager
 func (g *GpuDeviceManager) Devices() []*Device {
-	n, err := nvml.GetDeviceCount()
-	check(err)
+	// n, err := nvml.GetDeviceCount()
+	// check(err)
+	n := uint(4)
 
 	var devs []*Device
 	for i := uint(0); i < n; i++ {
-		d, err := nvml.NewDeviceLite(i)
-		check(err)
-
-		migEnabled, err := d.IsMigEnabled()
-		check(err)
-
-		if migEnabled && g.skipMigEnabledGPUs {
-			continue
-		}
-
-		devs = append(devs, buildDevice(d, []string{d.Path}, fmt.Sprintf("%v", i)))
+		index := fmt.Sprintf("%v", i)
+		devs = append(devs, buildFakeDevice("testGPU-" + index, index))
 	}
 
 	return devs
@@ -160,6 +152,14 @@ func buildDevice(d *nvml.Device, paths []string, index string) *Device {
 			},
 		}
 	}
+	return &dev
+}
+
+func buildFakeDevice(UUID string, index string) *Device {
+	dev := Device{}
+	dev.ID = UUID
+	dev.Health = pluginapi.Healthy
+	dev.Index = index
 	return &dev
 }
 
