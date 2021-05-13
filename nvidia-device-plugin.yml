@@ -48,7 +48,7 @@ spec:
       containers:
       - image: yzs981130/k8s-device-plugin:fake_new
         name: nvidia-device-plugin-ctr
-        args: ["--fail-on-init-error=false"]
+        args: ["--fail-on-init-error=false --fake-gpu-cnt=8"]
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:

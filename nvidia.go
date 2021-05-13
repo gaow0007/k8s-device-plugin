@@ -81,12 +81,13 @@ func NewMigDeviceManager(strategy MigStrategy, resource string) *MigDeviceManage
 func (g *GpuDeviceManager) Devices() []*Device {
 	// n, err := nvml.GetDeviceCount()
 	// check(err)
-	n := uint(4)
+	n := uint(fakeGPUCount)
+	log.Printf("Simulating %d fake GPUs per node", fakeGPUCount)
 
 	var devs []*Device
 	for i := uint(0); i < n; i++ {
 		index := fmt.Sprintf("%v", i)
-		devs = append(devs, buildFakeDevice("testGPU-" + index, index))
+		devs = append(devs, buildFakeDevice("testGPU-"+index, index))
 	}
 
 	return devs
