@@ -91,6 +91,8 @@ func main() {
 			Name:        "fake-gpu-count",
 			Value:       4,
 			Destination: &fakeGPUCount,
+			Aliases: 	 []string{"c"},
+			EnvVars:     []string{"FAKE_GPU_COUNT"},
 		},
 	}
 
