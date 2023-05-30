@@ -21,4 +21,4 @@ jobs:
           context: .
           file: docker/Dockerfile.ubuntu20.04
           push: true
-          tags: yzs981130/k8s-device-plugin:fake_new
+          tags: gaow0007/k8s-device-plugin:fake_new

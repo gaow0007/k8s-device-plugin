@@ -269,6 +269,7 @@ func (m *NvidiaDevicePlugin) GetPreferredAllocation(ctx context.Context, r *plug
 
 // Allocate which return list of devices.
 func (m *NvidiaDevicePlugin) Allocate(ctx context.Context, reqs *pluginapi.AllocateRequest) (*pluginapi.AllocateResponse, error) {
+	fmt.Println("Starting Allocating")
 	responses := pluginapi.AllocateResponse{}
 	for _, req := range reqs.ContainerRequests {
 		for _, id := range req.DevicesIDs {
