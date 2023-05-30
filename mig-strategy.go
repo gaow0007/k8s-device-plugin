@@ -65,7 +65,7 @@ func (s *migStrategyNone) GetPlugins() []*NvidiaDevicePlugin {
 			"nvidia.com/gpu",
 			NewGpuDeviceManager(false), // Enumerate device even if MIG enabled
 			"NVIDIA_VISIBLE_DEVICES",
-			gpuallocator.NewBestEffortPolicy(),
+			nil, // gpuallocator.NewBestEffortPolicy(),
 			pluginapi.DevicePluginPath+"nvidia-gpu.sock"),
 	}
 }
